@@ -1,0 +1,66 @@
+{
+    "name": "buzkall/ticktick",
+    "description": "A Laravel package to connect to TickTick API and manage tasks",
+    "keywords": [
+        "ticktick",
+        "laravel",
+        "api",
+        "task management",
+        "productivity"
+    ],
+    "homepage": "https://github.com/buzkall/ticktick",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "buzkall",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.5",
+        "illuminate/support": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.5",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Buzkall\\TickTick\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Buzkall\\TickTick\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint",
+        "format-check": "vendor/bin/pint --test"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Buzkall\\TickTick\\TickTickServiceProvider"
+            ],
+            "aliases": {
+                "TickTick": "Buzkall\\TickTick\\Facades\\TickTick"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
