@@ -1,5 +1,5 @@
 {
-    "name": "buzkall/ticktick",
+    "name": "buzkall/laravel-ticktick",
     "description": "A Laravel package to connect to TickTick API and manage tasks",
     "keywords": [
         "ticktick",
