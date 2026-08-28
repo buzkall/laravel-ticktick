@@ -98,30 +98,72 @@ class TickTickClient
      * config/ticktick.php, so they only need to be passed explicitly when
      * overriding them.
      */
-    public function getAuthorizationUrl(?string $clientId = null, ?string $redirectUri = null, ?string $scope = null, string $state = ''): string
+    public function getAuthorizationUrl(?string $clientId = null, ?string $redirectUri = null, ?string $scope = null, string $state = '', ?string $codeChallenge = null): string
     {
-        $params = http_build_query([
-            'client_id'     => $this->requireCredential($clientId ?? $this->clientId, 'client_id'),
-            'redirect_uri'  => $this->requireCredential($redirectUri ?? $this->redirectUri, 'redirect_uri'),
-            'scope'         => $scope ?? $this->scope,
-            'state'         => $state ?: bin2hex(random_bytes(16)),
-            'response_type' => 'code',
+        $params = $this->filterNulls([
+            'client_id'             => $this->requireCredential($clientId ?? $this->clientId, 'client_id'),
+            'redirect_uri'          => $this->requireCredential($redirectUri ?? $this->redirectUri, 'redirect_uri'),
+            'scope'                 => $scope ?? $this->scope,
+            'state'                 => $state ?: bin2hex(random_bytes(16)),
+            'response_type'         => 'code',
+            'code_challenge'        => $codeChallenge,
+            'code_challenge_method' => $codeChallenge === null ? null : 'S256',
         ]);
 
-        return "{$this->oauthUrl}/oauth/authorize?{$params}";
+        return "{$this->oauthUrl}/oauth/authorize?" . http_build_query($params);
+    }
+
+    /**
+     * Generate a PKCE verifier and its S256 challenge.
+     *
+     * Store the verifier (in the session, for instance) between the redirect
+     * and the callback; the challenge goes on the authorization URL.
+     *
+     * @return array{code_verifier: string, code_challenge: string}
+     */
+    public static function generatePkceChallenge(): array
+    {
+        $verifier = self::base64UrlEncode(random_bytes(32));
+
+        return [
+            'code_verifier'  => $verifier,
+            'code_challenge' => self::base64UrlEncode(hash('sha256', $verifier, true)),
+        ];
+    }
+
+    protected static function base64UrlEncode(string $bytes): string
+    {
+        return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
     }
 
     /**
      * Exchange the authorization code returned by TickTick for an access token.
      */
-    public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null): array
+    public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null): array
+    {
+        return $this->requestToken($this->filterNulls([
+            'grant_type'    => 'authorization_code',
+            'code'          => $code,
+            'redirect_uri'  => $this->requireCredential($redirectUri ?? $this->redirectUri, 'redirect_uri'),
+            'scope'         => $scope ?? $this->scope,
+            'code_verifier' => $codeVerifier,
+        ]), $clientId, $clientSecret);
+    }
+
+    /**
+     * Exchange an authorization code obtained through the PKCE flow.
+     *
+     * PKCE is for public clients, so no client secret is sent.
+     */
+    public function getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null): array
     {
         return $this->requestToken([
-            'grant_type'   => 'authorization_code',
-            'code'         => $code,
-            'redirect_uri' => $this->requireCredential($redirectUri ?? $this->redirectUri, 'redirect_uri'),
-            'scope'        => $scope ?? $this->scope,
-        ], $clientId, $clientSecret);
+            'grant_type'    => 'authorization_code',
+            'code'          => $code,
+            'redirect_uri'  => $this->requireCredential($redirectUri ?? $this->redirectUri, 'redirect_uri'),
+            'scope'         => $scope ?? $this->scope,
+            'code_verifier' => $codeVerifier,
+        ], $clientId, null, false);
     }
 
     /**
@@ -152,20 +194,25 @@ class TickTickClient
      * TickTick documentation) and as form parameters, which keeps the request
      * compatible with either expectation.
      */
-    protected function requestToken(array $params, ?string $clientId = null, ?string $clientSecret = null): array
+    protected function requestToken(array $params, ?string $clientId = null, ?string $clientSecret = null, bool $confidential = true): array
     {
         $clientId = $this->requireCredential($clientId ?? $this->clientId, 'client_id');
-        $clientSecret = $this->requireCredential($clientSecret ?? $this->clientSecret, 'client_secret');
+        $options = [
+            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+        ];
+
+        $params['client_id'] = $clientId;
+
+        if ($confidential) {
+            // Confidential clients authenticate with their secret, sent both as
+            // HTTP Basic auth and as form parameters.
+            $clientSecret = $this->requireCredential($clientSecret ?? $this->clientSecret, 'client_secret');
+            $options['auth'] = [$clientId, $clientSecret];
+            $params['client_secret'] = $clientSecret;
+        }
 
         try {
-            $response = $this->client->post("{$this->oauthUrl}/oauth/token", [
-                'auth'        => [$clientId, $clientSecret],
-                'headers'     => ['Content-Type' => 'application/x-www-form-urlencoded'],
-                'form_params' => array_merge($params, [
-                    'client_id'     => $clientId,
-                    'client_secret' => $clientSecret,
-                ]),
-            ]);
+            $response = $this->client->post("{$this->oauthUrl}/oauth/token", $options + ['form_params' => $params]);
 
             $data = $this->decodeBody($response->getBody()->getContents());
 
@@ -233,9 +280,14 @@ class TickTickClient
         return $this->request('PUT', $endpoint, empty($data) ? [] : ['json' => $data]);
     }
 
-    public function delete(string $endpoint): array
+    public function delete(string $endpoint, array $query = []): array
     {
-        return $this->request('DELETE', $endpoint);
+        $options = [];
+        if (! empty($query)) {
+            $options['query'] = $query;
+        }
+
+        return $this->request('DELETE', $endpoint, $options);
     }
 
     /**
@@ -281,6 +333,14 @@ class TickTickClient
         }
 
         return new TickTickException($prefix . ': ' . $message, (int)$e->getCode(), $e, $statusCode, $responseBody);
+    }
+
+    /**
+     * Drop null entries so optional parameters are omitted entirely.
+     */
+    protected function filterNulls(array $data): array
+    {
+        return array_filter($data, static fn($value) => $value !== null);
     }
 
     protected function requireCredential(?string $value, string $name): string

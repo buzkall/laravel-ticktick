@@ -7,8 +7,9 @@ A Laravel package to connect to the TickTick API, authenticate, and interact wit
 
 ## Features
 
-- 🔐 OAuth2 authentication flow
-- ✅ Complete task management (create, read, update, delete)
+- 🔐 OAuth2 authentication: authorization code, PKCE, or a personal API token
+- ✅ Full Open API v1 coverage: tasks, projects, groups, columns, tags, habits, focus and countdowns
+- 🔎 Server-side task search and filtering
 - 🎯 Task completion tracking
 - 🚀 Laravel service provider and facade
 - ✨ Clean and intuitive API
@@ -60,7 +61,60 @@ The API documentation is here: https://developer.ticktick.com/docs#/openapi
 
 ### Authentication
 
-#### Step 1: Redirect user to TickTick authorization page
+Three options, simplest first.
+
+#### Option A: Personal API token (no OAuth)
+
+The quickest way to get going, and the only one that works in a headless
+environment. In the TickTick web app click your avatar, then
+**Settings → Account → API Token**, and create a token.
+
+```env
+TICKTICK_ACCESS_TOKEN=your_api_token
+```
+
+That token is sent exactly like an OAuth access token, so every method in this
+package works with it and there is no browser round trip to arrange. This is the
+same mechanism the official TickTick CLI uses for `ticktick auth token <token>`.
+
+#### Option B: OAuth with PKCE (no client secret)
+
+PKCE suits public clients that cannot keep a secret. Generate a verifier before
+redirecting, keep it in the session, and send it back on the callback.
+
+```php
+Route::get('/ticktick/auth', function () {
+    $pkce = TickTick::generatePkceChallenge();
+    $state = Str::random(40);
+
+    session([
+        'ticktick_state'         => $state,
+        'ticktick_code_verifier' => $pkce['code_verifier'],
+    ]);
+
+    return redirect(TickTick::getAuthorizationUrl(
+        state: $state,
+        codeChallenge: $pkce['code_challenge'],
+    ));
+});
+
+Route::get('/ticktick/callback', function (Request $request) {
+    abort_unless($request->get('state') === session('ticktick_state'), 403);
+
+    $tokenData = TickTick::getAccessTokenFromPkceCode(
+        $request->get('code'),
+        session('ticktick_code_verifier'),
+    );
+
+    session(['ticktick_access_token' => $tokenData['access_token']]);
+
+    return redirect('/dashboard');
+});
+```
+
+#### Option C: OAuth authorization code (with client secret)
+
+##### Step 1: Redirect user to TickTick authorization page
 
 The client id, redirect uri and scope default to the values in
 `config/ticktick.php`, so you only need to pass them to override the defaults.
@@ -79,7 +133,7 @@ Route::get('/ticktick/auth', function () {
 If a random state is not provided, one is generated for you. Store it in the
 session so you can verify it in the callback.
 
-#### Step 2: Handle the callback
+##### Step 2: Handle the callback
 
 ```php
 Route::get('/ticktick/callback', function (Request $request) {
@@ -99,7 +153,7 @@ Route::get('/ticktick/callback', function (Request $request) {
 });
 ```
 
-#### Step 3: Refresh the access token when it expires
+##### Step 3: Refresh the access token when it expires
 
 ```php
 $tokenData = TickTick::refreshAccessToken(session('ticktick_refresh_token'));
@@ -212,6 +266,115 @@ TickTick::tasks()->delete($taskId, $projectId);
 TickTick::tasks()->complete($taskId, $projectId);
 ```
 
+### Searching and filtering tasks
+
+TickTick can filter server-side, which avoids pulling a whole project down.
+
+```php
+// Full-text search, optionally narrowed
+$tasks = TickTick::tasks()->search('quarterly report',
+    projectIds: [$projectId],
+    tags: ['work'],
+    status: [TaskResource::STATUS_OPEN],
+);
+
+// Search by due date range only
+$tasks = TickTick::tasks()->search(
+    dueFrom: '2026-07-01T00:00:00+0000',
+    dueTo: '2026-07-31T23:59:59+0000',
+);
+
+// Structured filter
+$tasks = TickTick::tasks()->filter(
+    projectIds: [$projectId],
+    priority: [TaskResource::PRIORITY_MEDIUM, TaskResource::PRIORITY_HIGH],
+    status: [TaskResource::STATUS_OPEN],
+);
+
+// Completed tasks in a range
+$done = TickTick::tasks()->completed([$projectId],
+    '2026-03-01T00:00:00+0000',
+    '2026-03-09T23:59:59+0000',
+);
+```
+
+Note that `today()` and `byDueDate()` still filter client-side, since the API
+has no single-day due-date filter; `search()` with `dueFrom`/`dueTo` is the
+server-side equivalent for a range.
+
+### Moving tasks and comments
+
+```php
+TickTick::tasks()->moveTask($taskId, $fromProjectId, $toProjectId);
+
+TickTick::tasks()->move([
+    ['taskId' => $a, 'fromProjectId' => $p1, 'toProjectId' => $p2],
+    ['taskId' => $b, 'fromProjectId' => $p1, 'toProjectId' => $p3],
+]);
+
+$comments = TickTick::tasks()->comments($taskId, $projectId);
+TickTick::tasks()->addComment($taskId, $projectId, ['title' => 'Done']);
+TickTick::tasks()->deleteComment($taskId, $projectId, $commentId);
+```
+
+### Managing projects, groups and columns
+
+```php
+$project = TickTick::projects()->create([
+    'name'     => 'Work',
+    'color'    => '#F18181',
+    'viewMode' => 'kanban',   // list, kanban or timeline
+    'kind'     => 'TASK',     // TASK or NOTE
+]);
+
+TickTick::projects()->update($projectId, ['name' => 'New name']);
+TickTick::projects()->delete($projectId);
+
+// Groups (sidebar folders)
+TickTick::projectGroups()->all();
+TickTick::projectGroups()->create(['name' => 'Work']);
+TickTick::projectGroups()->update($groupId, ['name' => 'Personal']);
+TickTick::projectGroups()->delete($groupId);
+
+// Kanban columns
+TickTick::columns()->all($projectId);
+TickTick::columns()->create($projectId, ['name' => 'In progress']);
+TickTick::columns()->update($projectId, $columnId, ['name' => 'Done']);
+```
+
+### Tags, habits, focus and countdowns
+
+```php
+TickTick::tags()->all();
+TickTick::tags()->create(['name' => 'urgent', 'label' => 'urgent']);
+
+// Habits
+TickTick::habits()->all();
+TickTick::habits()->create(['name' => 'Drink water', 'goal' => 8, 'unit' => 'cups']);
+TickTick::habits()->checkin($habitId, ['stamp' => 20260407, 'value' => 1, 'goal' => 8]);
+TickTick::habits()->checkins([$habitId], 20260401, 20260430);
+
+// Focus records (the API caps the range at 30 days)
+TickTick::focus()->all('2026-04-01T00:00:00+0000', '2026-04-30T23:59:59+0000');
+TickTick::focus()->get($focusId, FocusResource::TYPE_TIMING);
+TickTick::focus()->delete($focusId, FocusResource::TYPE_POMODORO);
+
+TickTick::countdowns()->all();
+```
+
+### Field formats
+
+| Field | Values |
+| ----- | ------ |
+| `priority` | `0` none, `1` low, `3` medium, `5` high |
+| `status` | `0` open, `-1` abandoned, `2` completed |
+| `viewMode` | `list`, `kanban`, `timeline` |
+| `kind` | `TASK`, `NOTE`, `CHECKLIST` |
+| `reminders[]` | `TRIGGER(;RELATED=START\|END)?:(-)?P…` e.g. `TRIGGER:-PT60M`, `TRIGGER;RELATED=END:-PT15M` |
+| `repeatFlag` | A single `RRULE:` or `ERULE:` string, never both |
+| Focus `type` | `0` pomodoro, `1` timing |
+| Habit check-in `stamp` | `Ymd`, e.g. `20260407` |
+
 ### Using without Facade
 
 ```php
@@ -253,7 +416,9 @@ class TaskController extends Controller
 
 All arguments except `$code` and `$state` fall back to `config/ticktick.php`.
 
-- `getAuthorizationUrl($clientId = null, $redirectUri = null, $scope = null, $state = '')` - Generate authorization URL
+- `getAuthorizationUrl($clientId = null, $redirectUri = null, $scope = null, $state = '', $codeChallenge = null)` - Generate authorization URL; pass a challenge for PKCE
+- `generatePkceChallenge()` - Returns `['code_verifier' => …, 'code_challenge' => …]` (S256)
+- `getAccessTokenFromPkceCode($code, $codeVerifier, $clientId = null, $redirectUri = null, $scope = null)` - Exchange a PKCE code, no client secret sent
 - `getAccessTokenFromCode($code, $clientId = null, $clientSecret = null, $redirectUri = null, $scope = null)` - Exchange authorization code for access token
 - `refreshAccessToken($refreshToken = null, $clientId = null, $clientSecret = null, $scope = null)` - Exchange a refresh token for a new access token
 - `setAccessToken($token)` / `getAccessToken()` - Set or read the access token used for API requests
@@ -263,7 +428,18 @@ All arguments except `$code` and `$state` fall back to `config/ticktick.php`.
 
 - `projects()->all($params = [])` - Get all projects
 - `projects()->get($projectId)` - Get a specific project
-- `projects()->getData($projectId)` - Get project data including all tasks
+- `projects()->getData($projectId)` - Get project data including all tasks and columns
+- `projects()->create($data)` - Create a project
+- `projects()->update($projectId, $data)` - Update a project
+- `projects()->delete($projectId)` - Delete a project
+
+### Project Group Methods
+
+- `projectGroups()->all()` / `create($data)` / `update($groupId, $data)` / `delete($groupId)`
+
+### Column Methods
+
+- `columns()->all($projectId)` / `create($projectId, $data)` / `update($projectId, $columnId, $data)`
 
 ### Task Methods
 
@@ -275,6 +451,28 @@ All arguments except `$code` and `$state` fall back to `config/ticktick.php`.
 - `tasks()->update($taskId, $projectId, $data)` - Update a task
 - `tasks()->delete($taskId, $projectId)` - Delete a task
 - `tasks()->complete($taskId, $projectId)` - Mark task as complete
+- `tasks()->move($moves)` / `moveTask($taskId, $from, $to)` - Move tasks between projects
+- `tasks()->completed($projectIds, $startDate, $endDate)` - Completed tasks in a range
+- `tasks()->filter($projectIds, $startDate, $endDate, $priority, $tag, $status)` - Server-side filter
+- `tasks()->search($keywords, $projectIds, $tags, $status, $dueFrom, $dueTo)` - Server-side search
+- `tasks()->comments($taskId, $projectId)` / `addComment(...)` / `deleteComment(...)`
+
+### Tag Methods
+
+- `tags()->all()` / `create($data)`
+
+### Habit Methods
+
+- `habits()->all()` / `get($habitId)` / `create($data)` / `update($habitId, $data)`
+- `habits()->checkin($habitId, $data)` / `checkins($habitIds, $from, $to)`
+
+### Focus Methods
+
+- `focus()->all($from, $to, $type)` / `get($focusId, $type)` / `create($data)` / `delete($focusId, $type)`
+
+### Countdown Methods
+
+- `countdowns()->all()`
 
 ## Error handling
 

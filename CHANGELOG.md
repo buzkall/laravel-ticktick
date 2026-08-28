@@ -32,6 +32,17 @@ All notable changes to `laravel-ticktick` will be documented in this file.
 
 ### Added
 
+- Full TickTick Open API v1 coverage, matching the surface of the official
+  TickTick CLI: 30 further endpoints across tasks (move, completed, filter,
+  search, comments), projects (create, update, delete), project groups, kanban
+  columns, tags, habits, focus records and countdowns.
+- Server-side task `search()` and `filter()`, so narrowing tasks no longer means
+  downloading a whole project and filtering in PHP.
+- OAuth PKCE support: `generatePkceChallenge()`, a `codeChallenge` argument on
+  `getAuthorizationUrl()`, and `getAccessTokenFromPkceCode()` which sends no
+  client secret.
+- Documented the personal API token (Settings > Account > API Token) as a
+  first-class setup path; it needs no OAuth round trip.
 - `refreshAccessToken()` to exchange a refresh token for a new access token,
   plus `TICKTICK_REFRESH_TOKEN` and `TICKTICK_SCOPE` configuration entries.
 - `getAuthorizationUrl()` and `getAccessTokenFromCode()` fall back to the

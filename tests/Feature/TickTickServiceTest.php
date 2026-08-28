@@ -1,7 +1,13 @@
 <?php
 
 use Buzkall\TickTick\Facades\TickTick as TickTickFacade;
+use Buzkall\TickTick\Resources\ColumnResource;
+use Buzkall\TickTick\Resources\CountdownResource;
+use Buzkall\TickTick\Resources\FocusResource;
+use Buzkall\TickTick\Resources\HabitResource;
+use Buzkall\TickTick\Resources\ProjectGroupResource;
 use Buzkall\TickTick\Resources\ProjectResource;
+use Buzkall\TickTick\Resources\TagResource;
 use Buzkall\TickTick\Resources\TaskResource;
 use Buzkall\TickTick\TickTick;
 use Buzkall\TickTick\TickTickClient;
@@ -11,7 +17,22 @@ test('it exposes the client and the resources', function() {
 
     expect($ticktick->client())->toBeInstanceOf(TickTickClient::class)
         ->and($ticktick->tasks())->toBeInstanceOf(TaskResource::class)
-        ->and($ticktick->projects())->toBeInstanceOf(ProjectResource::class);
+        ->and($ticktick->projects())->toBeInstanceOf(ProjectResource::class)
+        ->and($ticktick->projectGroups())->toBeInstanceOf(ProjectGroupResource::class)
+        ->and($ticktick->columns())->toBeInstanceOf(ColumnResource::class)
+        ->and($ticktick->tags())->toBeInstanceOf(TagResource::class)
+        ->and($ticktick->focus())->toBeInstanceOf(FocusResource::class)
+        ->and($ticktick->habits())->toBeInstanceOf(HabitResource::class)
+        ->and($ticktick->countdowns())->toBeInstanceOf(CountdownResource::class);
+});
+
+test('every resource shares the same client instance', function() {
+    $ticktick = new TickTick(['access_token' => 'test_token']);
+    $ticktick->setAccessToken('rotated_token');
+
+    // Resources hold the client by reference, so rotating the token must apply
+    // to all of them without rebuilding anything.
+    expect($ticktick->client()->getAccessToken())->toBe('rotated_token');
 });
 
 test('it can set the access and refresh tokens', function() {
