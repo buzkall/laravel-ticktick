@@ -2,6 +2,8 @@
 
 namespace Buzkall\TickTick\Tests;
 
+use Buzkall\TickTick\Facades\TickTick;
+use Buzkall\TickTick\TickTickServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -9,14 +11,14 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            \Buzkall\TickTick\TickTickServiceProvider::class,
+            TickTickServiceProvider::class,
         ];
     }
 
     protected function getPackageAliases($app): array
     {
         return [
-            'TickTick' => \Buzkall\TickTick\Facades\TickTick::class,
+            'TickTick' => TickTick::class,
         ];
     }
 
@@ -26,5 +28,6 @@ abstract class TestCase extends Orchestra
         $app['config']->set('ticktick.client_secret', 'test_client_secret');
         $app['config']->set('ticktick.redirect_uri', 'https://example.com/callback');
         $app['config']->set('ticktick.access_token', 'test_access_token');
+        $app['config']->set('ticktick.refresh_token', 'test_refresh_token');
     }
 }

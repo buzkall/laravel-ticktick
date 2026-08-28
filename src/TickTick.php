@@ -40,13 +40,35 @@ class TickTick
         return $this;
     }
 
-    public function getAuthorizationUrl(string $clientId, string $redirectUri, string $scope = 'tasks:read tasks:write', string $state = ''): string
+    public function getAccessToken(): ?string
+    {
+        return $this->client->getAccessToken();
+    }
+
+    public function setRefreshToken(string $token): self
+    {
+        $this->client->setRefreshToken($token);
+
+        return $this;
+    }
+
+    public function getRefreshToken(): ?string
+    {
+        return $this->client->getRefreshToken();
+    }
+
+    public function getAuthorizationUrl(?string $clientId = null, ?string $redirectUri = null, ?string $scope = null, string $state = ''): string
     {
         return $this->client->getAuthorizationUrl($clientId, $redirectUri, $scope, $state);
     }
 
-    public function getAccessTokenFromCode(string $code, string $clientId, string $clientSecret, string $redirectUri): array
+    public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null): array
     {
-        return $this->client->getAccessTokenFromCode($code, $clientId, $clientSecret, $redirectUri);
+        return $this->client->getAccessTokenFromCode($code, $clientId, $clientSecret, $redirectUri, $scope);
+    }
+
+    public function refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null): array
+    {
+        return $this->client->refreshAccessToken($refreshToken, $clientId, $clientSecret, $scope);
     }
 }

@@ -1,47 +1,58 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "uses()" function to bind a different classes or traits.
-|
-*/
+use Buzkall\TickTick\Tests\TestCase;
+use Buzkall\TickTick\TickTick;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 uses(
-    Buzkall\TickTick\Tests\TestCase::class,
+    TestCase::class,
 )->in('Feature', 'Unit');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
-
-expect()->extend('toBeOne', function() {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
+/**
+ * Build a TickTick instance backed by a mocked Guzzle handler, recording every
+ * request that the package sends into $history.
+ *
+ * @param  array<int, ResponseInterface|Throwable>  $responses
+ * @param  array<int, array<string, mixed>>  $history
+ */
+function fakeTickTick(array $responses, ?array &$history = null, array $config = []): TickTick
 {
-    // ..
+    $history = [];
+
+    $stack = HandlerStack::create(new MockHandler($responses));
+    $stack->push(Middleware::history($history));
+
+    return new TickTick(array_merge([
+        'access_token'  => 'test_access_token',
+        'client_id'     => 'test_client_id',
+        'client_secret' => 'test_client_secret',
+        'redirect_uri'  => 'https://example.com/callback',
+        'base_url'      => 'https://api.ticktick.com',
+        'open_api_url'  => 'https://api.ticktick.com/open/v1',
+        'oauth_url'     => 'https://ticktick.com',
+        'handler'       => $stack,
+    ], $config));
+}
+
+/**
+ * Shorthand for a JSON response.
+ */
+function jsonResponse(array $body, int $status = 200): Response
+{
+    return new Response($status, ['Content-Type' => 'application/json'], json_encode($body));
+}
+
+/**
+ * The request recorded by the history middleware at the given index.
+ */
+function recordedRequest(array $history, int $index = 0): RequestInterface
+{
+    expect($history)->toHaveCount(max($index + 1, count($history)));
+
+    return $history[$index]['request'];
 }

@@ -18,6 +18,8 @@ class TickTickServiceProvider extends ServiceProvider
                 'client_secret' => $config['client_secret'] ?? null,
                 'redirect_uri'  => $config['redirect_uri'] ?? null,
                 'access_token'  => $config['access_token'] ?? null,
+                'refresh_token' => $config['refresh_token'] ?? null,
+                'scope'         => $config['scope'] ?? TickTickClient::DEFAULT_SCOPE,
                 'base_url'      => $config['base_url'] ?? 'https://api.ticktick.com',
                 'open_api_url'  => $config['open_api_url'] ?? 'https://api.ticktick.com/open/v1',
                 'oauth_url'     => $config['oauth_url'] ?? 'https://ticktick.com',

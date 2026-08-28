@@ -108,7 +108,7 @@ class TaskResource
      */
     public function complete(string $taskId, string $projectId): array
     {
-        return $this->client->post("{$this->getOpenApiUrl()}/project/{$projectId}/task/{$taskId}/complete", []);
+        return $this->client->post("{$this->getOpenApiUrl()}/project/{$projectId}/task/{$taskId}/complete");
     }
 
     /**
