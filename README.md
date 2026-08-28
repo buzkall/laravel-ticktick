@@ -15,6 +15,11 @@ A Laravel package to connect to the TickTick API, authenticate, and interact wit
 - 🔄 Refresh token support
 - 🧪 Test suite covering the HTTP layer
 
+## Requirements
+
+- PHP 8.3 or higher
+- Laravel 12 or 13
+
 ## Installation
 
 You can install the package via Composer:

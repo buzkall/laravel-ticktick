@@ -21,6 +21,15 @@ All notable changes to `laravel-ticktick` will be documented in this file.
   which does not exist. The package is `buzkall/laravel-ticktick`.
 - The facade docblock was missing `projects()`.
 
+### Changed
+
+- Dropped PHP 8.2 and Laravel 11. The package now requires PHP 8.3+ and
+  Laravel 12 or 13.
+- Test on Pest 5 where the dependency tree allows it. Pest 5 requires PHP 8.4
+  and pulls the Symfony 8 tree, which conflicts with the Symfony 7 constraint
+  in testbench 10 (Laravel 12), so the constraint is `^4.0|^5.0`: the
+  PHP 8.4 + Laravel 13 leg runs Pest 5, the rest run Pest 4.
+
 ### Added
 
 - `refreshAccessToken()` to exchange a refresh token for a new access token,
