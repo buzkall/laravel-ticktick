@@ -2,7 +2,13 @@
 
 namespace Arzcode\TickTick;
 
+use Arzcode\TickTick\Resources\ColumnResource;
+use Arzcode\TickTick\Resources\CountdownResource;
+use Arzcode\TickTick\Resources\FocusResource;
+use Arzcode\TickTick\Resources\HabitResource;
+use Arzcode\TickTick\Resources\ProjectGroupResource;
 use Arzcode\TickTick\Resources\ProjectResource;
+use Arzcode\TickTick\Resources\TagResource;
 use Arzcode\TickTick\Resources\TaskResource;
 
 class TickTick
@@ -10,12 +16,24 @@ class TickTick
     protected TickTickClient $client;
     protected TaskResource $tasks;
     protected ProjectResource $projects;
+    protected ProjectGroupResource $projectGroups;
+    protected ColumnResource $columns;
+    protected TagResource $tags;
+    protected FocusResource $focus;
+    protected HabitResource $habits;
+    protected CountdownResource $countdowns;
 
     public function __construct(array $config = [])
     {
         $this->client = new TickTickClient($config);
         $this->tasks = new TaskResource($this->client);
         $this->projects = new ProjectResource($this->client);
+        $this->projectGroups = new ProjectGroupResource($this->client);
+        $this->columns = new ColumnResource($this->client);
+        $this->tags = new TagResource($this->client);
+        $this->focus = new FocusResource($this->client);
+        $this->habits = new HabitResource($this->client);
+        $this->countdowns = new CountdownResource($this->client);
     }
 
     public function client(): TickTickClient
@@ -33,6 +51,36 @@ class TickTick
         return $this->projects;
     }
 
+    public function projectGroups(): ProjectGroupResource
+    {
+        return $this->projectGroups;
+    }
+
+    public function columns(): ColumnResource
+    {
+        return $this->columns;
+    }
+
+    public function tags(): TagResource
+    {
+        return $this->tags;
+    }
+
+    public function focus(): FocusResource
+    {
+        return $this->focus;
+    }
+
+    public function habits(): HabitResource
+    {
+        return $this->habits;
+    }
+
+    public function countdowns(): CountdownResource
+    {
+        return $this->countdowns;
+    }
+
     public function setAccessToken(string $token): self
     {
         $this->client->setAccessToken($token);
@@ -40,13 +88,48 @@ class TickTick
         return $this;
     }
 
-    public function getAuthorizationUrl(string $clientId, string $redirectUri, string $scope = 'tasks:read tasks:write', string $state = ''): string
+    public function getAccessToken(): ?string
     {
-        return $this->client->getAuthorizationUrl($clientId, $redirectUri, $scope, $state);
+        return $this->client->getAccessToken();
     }
 
-    public function getAccessTokenFromCode(string $code, string $clientId, string $clientSecret, string $redirectUri): array
+    public function setRefreshToken(string $token): self
     {
-        return $this->client->getAccessTokenFromCode($code, $clientId, $clientSecret, $redirectUri);
+        $this->client->setRefreshToken($token);
+
+        return $this;
+    }
+
+    public function getRefreshToken(): ?string
+    {
+        return $this->client->getRefreshToken();
+    }
+
+    public function getAuthorizationUrl(?string $clientId = null, ?string $redirectUri = null, ?string $scope = null, string $state = '', ?string $codeChallenge = null): string
+    {
+        return $this->client->getAuthorizationUrl($clientId, $redirectUri, $scope, $state, $codeChallenge);
+    }
+
+    /**
+     * @return array{code_verifier: string, code_challenge: string}
+     */
+    public function generatePkceChallenge(): array
+    {
+        return TickTickClient::generatePkceChallenge();
+    }
+
+    public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null): array
+    {
+        return $this->client->getAccessTokenFromCode($code, $clientId, $clientSecret, $redirectUri, $scope, $codeVerifier);
+    }
+
+    public function getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null): array
+    {
+        return $this->client->getAccessTokenFromPkceCode($code, $codeVerifier, $clientId, $redirectUri, $scope);
+    }
+
+    public function refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null): array
+    {
+        return $this->client->refreshAccessToken($refreshToken, $clientId, $clientSecret, $scope);
     }
 }

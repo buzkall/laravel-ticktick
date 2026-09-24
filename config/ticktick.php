@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | OAuth Scopes
+    |--------------------------------------------------------------------------
+    |
+    | Space separated scopes requested during the OAuth flow. TickTick requires
+    | the scope on both the authorization request and the token exchange.
+    |
+    */
+
+    'scope' => env('TICKTICK_SCOPE', 'tasks:read tasks:write'),
+
+    /*
+    |--------------------------------------------------------------------------
     | API Base URL
     |--------------------------------------------------------------------------
     |
@@ -59,6 +71,18 @@ return [
     */
 
     'access_token' => env('TICKTICK_ACCESS_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Refresh Token
+    |--------------------------------------------------------------------------
+    |
+    | Access tokens expire. Store the refresh token returned by the token
+    | exchange to obtain a new access token without repeating the OAuth flow.
+    |
+    */
+
+    'refresh_token' => env('TICKTICK_REFRESH_TOKEN'),
 
     /*
     |--------------------------------------------------------------------------
