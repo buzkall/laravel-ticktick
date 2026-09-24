@@ -1,6 +1,6 @@
 <?php
 
-namespace Buzkall\TickTick\Exceptions;
+namespace Arzcode\TickTick\Exceptions;
 
 use Exception;
 

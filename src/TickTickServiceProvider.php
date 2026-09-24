@@ -1,6 +1,6 @@
 <?php
 
-namespace Buzkall\TickTick;
+namespace Arzcode\TickTick;
 
 use Illuminate\Support\ServiceProvider;
 

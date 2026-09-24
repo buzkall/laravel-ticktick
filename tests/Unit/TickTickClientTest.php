@@ -1,7 +1,7 @@
 <?php
 
-use Buzkall\TickTick\Exceptions\TickTickException;
-use Buzkall\TickTick\TickTickClient;
+use Arzcode\TickTick\Exceptions\TickTickException;
+use Arzcode\TickTick\TickTickClient;
 
 beforeEach(function() {
     $this->client = new TickTickClient([

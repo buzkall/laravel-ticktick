@@ -1,8 +1,8 @@
 <?php
 
-namespace Buzkall\TickTick;
+namespace Arzcode\TickTick;
 
-use Buzkall\TickTick\Exceptions\TickTickException;
+use Arzcode\TickTick\Exceptions\TickTickException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 

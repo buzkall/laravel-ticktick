@@ -1,7 +1,7 @@
 <?php
 
-use Buzkall\TickTick\Facades\TickTick as TickTickFacade;
-use Buzkall\TickTick\TickTick;
+use Arzcode\TickTick\Facades\TickTick as TickTickFacade;
+use Arzcode\TickTick\TickTick;
 
 test('it can instantiate ticktick class', function() {
     $ticktick = new TickTick([
@@ -16,7 +16,7 @@ test('it provides access to client', function() {
         'access_token' => 'test_token',
     ]);
 
-    expect($ticktick->client())->toBeInstanceOf(\Buzkall\TickTick\TickTickClient::class);
+    expect($ticktick->client())->toBeInstanceOf(\Arzcode\TickTick\TickTickClient::class);
 });
 
 test('it provides access to task resource', function() {
@@ -24,7 +24,7 @@ test('it provides access to task resource', function() {
         'access_token' => 'test_token',
     ]);
 
-    expect($ticktick->tasks())->toBeInstanceOf(\Buzkall\TickTick\Resources\TaskResource::class);
+    expect($ticktick->tasks())->toBeInstanceOf(\Arzcode\TickTick\Resources\TaskResource::class);
 });
 
 test('it provides access to project resource', function() {
@@ -32,7 +32,7 @@ test('it provides access to project resource', function() {
         'access_token' => 'test_token',
     ]);
 
-    expect($ticktick->projects())->toBeInstanceOf(\Buzkall\TickTick\Resources\ProjectResource::class);
+    expect($ticktick->projects())->toBeInstanceOf(\Arzcode\TickTick\Resources\ProjectResource::class);
 });
 
 test('it can set access token', function() {

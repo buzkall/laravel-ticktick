@@ -1,8 +1,8 @@
 <?php
 
-namespace Buzkall\TickTick\Resources;
+namespace Arzcode\TickTick\Resources;
 
-use Buzkall\TickTick\TickTickClient;
+use Arzcode\TickTick\TickTickClient;
 
 class TaskResource
 {

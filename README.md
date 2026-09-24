@@ -1,7 +1,7 @@
 # TickTick Laravel Package
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/buzkall/ticktick.svg?style=flat-square)](https://packagist.org/packages/buzkall/ticktick)
-[![Total Downloads](https://img.shields.io/packagist/dt/buzkall/ticktick.svg?style=flat-square)](https://packagist.org/packages/buzkall/ticktick)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/arzcode/laravel-ticktick.svg?style=flat-square)](https://packagist.org/packages/arzcode/laravel-ticktick)
+[![Total Downloads](https://img.shields.io/packagist/dt/arzcode/laravel-ticktick.svg?style=flat-square)](https://packagist.org/packages/arzcode/laravel-ticktick)
 
 A Laravel package to connect to the TickTick API, authenticate, and interact with tasks. Built using the Spatie package skeleton structure.
 
@@ -19,7 +19,7 @@ A Laravel package to connect to the TickTick API, authenticate, and interact wit
 You can install the package via Composer:
 
 ```bash
-composer require buzkall/ticktick
+composer require arzcode/laravel-ticktick
 ```
 
 Publish the configuration file:
@@ -53,7 +53,7 @@ The API documentation is here: https://developer.ticktick.com/docs#/openapi
 #### Step 1: Redirect user to TickTick authorization page
 
 ```php
-use Buzkall\TickTick\Facades\TickTick;
+use Arzcode\TickTick\Facades\TickTick;
 
 Route::get('/ticktick/auth', function () {
     $authUrl = TickTick::getAuthorizationUrl(
@@ -92,7 +92,7 @@ Route::get('/ticktick/callback', function (Request $request) {
 #### Get all projects
 
 ```php
-use Buzkall\TickTick\Facades\TickTick;
+use Arzcode\TickTick\Facades\TickTick;
 
 // Set access token (if not already set in config)
 TickTick::setAccessToken(session('ticktick_access_token'));
@@ -184,7 +184,7 @@ TickTick::tasks()->complete($taskId, $projectId);
 ### Using without Facade
 
 ```php
-use Buzkall\TickTick\TickTick;
+use Arzcode\TickTick\TickTick;
 
 $ticktick = new TickTick([
     'access_token' => 'your_access_token',
@@ -200,7 +200,7 @@ $projects = $ticktick->projects()->all();
 ### Using Dependency Injection
 
 ```php
-use Buzkall\TickTick\TickTick;
+use Arzcode\TickTick\TickTick;
 
 class TaskController extends Controller
 {

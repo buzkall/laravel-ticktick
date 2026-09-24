@@ -1,6 +1,6 @@
 <?php
 
-namespace Buzkall\TickTick\Tests;
+namespace Arzcode\TickTick\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -9,14 +9,14 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            \Buzkall\TickTick\TickTickServiceProvider::class,
+            \Arzcode\TickTick\TickTickServiceProvider::class,
         ];
     }
 
     protected function getPackageAliases($app): array
     {
         return [
-            'TickTick' => \Buzkall\TickTick\Facades\TickTick::class,
+            'TickTick' => \Arzcode\TickTick\Facades\TickTick::class,
         ];
     }
 

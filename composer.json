@@ -1,5 +1,5 @@
 {
-    "name": "buzkall/laravel-ticktick",
+    "name": "arzcode/laravel-ticktick",
     "description": "A Laravel package to connect to TickTick API and manage tasks",
     "keywords": [
         "ticktick",
@@ -12,7 +12,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "buzkall",
+            "name": "arzcode",
             "role": "Developer"
         }
     ],
@@ -30,12 +30,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Buzkall\\TickTick\\": "src/"
+            "Arzcode\\TickTick\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Buzkall\\TickTick\\Tests\\": "tests/"
+            "Arzcode\\TickTick\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -54,10 +54,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Buzkall\\TickTick\\TickTickServiceProvider"
+                "Arzcode\\TickTick\\TickTickServiceProvider"
             ],
             "aliases": {
-                "TickTick": "Buzkall\\TickTick\\Facades\\TickTick"
+                "TickTick": "Arzcode\\TickTick\\Facades\\TickTick"
             }
         }
     },

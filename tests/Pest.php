@@ -12,7 +12,7 @@
 */
 
 uses(
-    Buzkall\TickTick\Tests\TestCase::class,
+    Arzcode\TickTick\Tests\TestCase::class,
 )->in('Feature', 'Unit');
 
 /*

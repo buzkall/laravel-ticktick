@@ -1,9 +1,9 @@
 <?php
 
-namespace Buzkall\TickTick;
+namespace Arzcode\TickTick;
 
-use Buzkall\TickTick\Resources\ProjectResource;
-use Buzkall\TickTick\Resources\TaskResource;
+use Arzcode\TickTick\Resources\ProjectResource;
+use Arzcode\TickTick\Resources\TaskResource;
 
 class TickTick
 {
