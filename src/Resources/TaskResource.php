@@ -24,12 +24,15 @@ class TaskResource extends Resource
      * Get all tasks for a specific project
      *
      * GET /open/v1/project/{projectId}/data
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<int, array<mixed>>
      */
     public function all(string $projectId, array $params = []): array
     {
         $response = $this->client->get("{$this->getOpenApiUrl()}/project/{$this->encode($projectId)}/data", $params);
 
-        return $response['tasks'] ?? [];
+        return is_array($response['tasks'] ?? null) ? $this->toList($response['tasks']) : [];
     }
 
     /**
@@ -38,8 +41,8 @@ class TaskResource extends Resource
      * @param  string  $projectId  The project ID
      * @param  string  $date  Date in Y-m-d format (e.g., '2025-01-15')
      * @param  string|null  $timezone  Timezone to use (e.g., 'Europe/Madrid'). Defaults to system timezone.
-     * @param  array  $params  Additional query parameters (not used for filtering)
-     * @return array Filtered tasks
+     * @param  array<string, mixed>  $params  Additional query parameters (not used for filtering)
+     * @return array<int, array<mixed>> Filtered tasks
      */
     public function byDueDate(string $projectId, string $date, ?string $timezone = null, array $params = []): array
     {
@@ -47,13 +50,15 @@ class TaskResource extends Resource
         $timezone = $timezone ?? date_default_timezone_get();
 
         return array_values(array_filter($allTasks, function($task) use ($date, $timezone) {
-            if (empty($task['dueDate'])) {
+            $dueDate = $task['dueDate'] ?? null;
+
+            if (! is_string($dueDate) || $dueDate === '') {
                 return false;
             }
 
             // Parse TickTick UTC date and convert to local timezone
             // TickTick format: 2021-05-06T21:30:00.000+0000
-            $utcDate = new \DateTime($task['dueDate'], new \DateTimeZone('UTC'));
+            $utcDate = new \DateTime($dueDate, new \DateTimeZone('UTC'));
             $localDate = $utcDate->setTimezone(new \DateTimeZone($timezone));
             $taskDate = $localDate->format('Y-m-d');
 
@@ -66,8 +71,8 @@ class TaskResource extends Resource
      *
      * @param  string  $projectId  The project ID
      * @param  string|null  $timezone  Timezone to use (e.g., 'Europe/Madrid'). Defaults to system timezone.
-     * @param  array  $params  Additional query parameters (not used for filtering)
-     * @return array Tasks due today
+     * @param  array<string, mixed>  $params  Additional query parameters (not used for filtering)
+     * @return array<int, array<mixed>> Tasks due today
      */
     public function today(string $projectId, ?string $timezone = null, array $params = []): array
     {
@@ -81,6 +86,8 @@ class TaskResource extends Resource
      * Get a specific task by ID
      *
      * GET /open/v1/project/{projectId}/task/{taskId}
+     *
+     * @return array<mixed>
      */
     public function get(string $taskId, string $projectId): array
     {
@@ -91,6 +98,9 @@ class TaskResource extends Resource
      * Create a new task
      *
      * POST /open/v1/task
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function create(array $data): array
     {
@@ -101,6 +111,9 @@ class TaskResource extends Resource
      * Update an existing task
      *
      * POST /open/v1/task/{taskId}
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function update(string $taskId, string $projectId, array $data): array
     {
@@ -114,6 +127,8 @@ class TaskResource extends Resource
      * Delete a task
      *
      * DELETE /open/v1/project/{projectId}/task/{taskId}
+     *
+     * @return array<mixed>
      */
     public function delete(string $taskId, string $projectId): array
     {
@@ -124,6 +139,8 @@ class TaskResource extends Resource
      * Complete a task
      *
      * POST /open/v1/project/{projectId}/task/{taskId}/complete
+     *
+     * @return array<mixed>
      */
     public function complete(string $taskId, string $projectId): array
     {
@@ -136,6 +153,7 @@ class TaskResource extends Resource
      * POST /open/v1/task/move
      *
      * @param  array<int, array{fromProjectId: string, toProjectId: string, taskId: string}>  $moves
+     * @return array<mixed>
      */
     public function move(array $moves): array
     {
@@ -144,6 +162,8 @@ class TaskResource extends Resource
 
     /**
      * Move a single task between projects
+     *
+     * @return array<mixed>
      */
     public function moveTask(string $taskId, string $fromProjectId, string $toProjectId): array
     {
@@ -162,14 +182,15 @@ class TaskResource extends Resource
      * @param  array<int, string>  $projectIds
      * @param  string  $startDate  ISO 8601, e.g. 2026-03-01T00:00:00+0000
      * @param  string  $endDate  ISO 8601, e.g. 2026-03-09T23:59:59+0000
+     * @return array<int, array<mixed>>
      */
     public function completed(array $projectIds, string $startDate, string $endDate): array
     {
-        return $this->client->post("{$this->getOpenApiUrl()}/task/completed", [
+        return $this->toList($this->client->post("{$this->getOpenApiUrl()}/task/completed", [
             'projectIds' => $projectIds,
             'startDate'  => $startDate,
             'endDate'    => $endDate,
-        ]);
+        ]));
     }
 
     /**
@@ -181,6 +202,7 @@ class TaskResource extends Resource
      * @param  array<int, int>|null  $priority  0 none, 1 low, 3 medium, 5 high
      * @param  array<int, string>|null  $tag
      * @param  array<int, int>|null  $status  0 open, -1 abandoned, 2 completed
+     * @return array<int, array<mixed>>
      */
     public function filter(
         ?array $projectIds = null,
@@ -190,14 +212,14 @@ class TaskResource extends Resource
         ?array $tag = null,
         ?array $status = null,
     ): array {
-        return $this->client->post("{$this->getOpenApiUrl()}/task/filter", $this->filterNulls([
+        return $this->toList($this->client->post("{$this->getOpenApiUrl()}/task/filter", $this->filterNulls([
             'projectIds' => $projectIds,
             'startDate'  => $startDate,
             'endDate'    => $endDate,
             'priority'   => $priority,
             'tag'        => $tag,
             'status'     => $status,
-        ]));
+        ])));
     }
 
     /**
@@ -210,6 +232,7 @@ class TaskResource extends Resource
      * @param  array<int, int>|null  $status  0 open, -1 abandoned, 2 completed
      * @param  string|null  $dueFrom  ISO 8601
      * @param  string|null  $dueTo  ISO 8601
+     * @return array<int, array<mixed>>
      */
     public function search(
         ?string $keywords = null,
@@ -219,30 +242,35 @@ class TaskResource extends Resource
         ?string $dueFrom = null,
         ?string $dueTo = null,
     ): array {
-        return $this->client->post("{$this->getOpenApiUrl()}/task/search", $this->filterNulls([
+        return $this->toList($this->client->post("{$this->getOpenApiUrl()}/task/search", $this->filterNulls([
             'keywords'   => $keywords,
             'projectIds' => $projectIds,
             'tags'       => $tags,
             'status'     => $status,
             'dueFrom'    => $dueFrom,
             'dueTo'      => $dueTo,
-        ]));
+        ])));
     }
 
     /**
      * List the comments of a task
      *
      * GET /open/v1/project/{projectId}/task/{taskId}/comments
+     *
+     * @return array<int, array<mixed>>
      */
     public function comments(string $taskId, string $projectId): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/project/{$this->encode($projectId)}/task/{$this->encode($taskId)}/comments");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/project/{$this->encode($projectId)}/task/{$this->encode($taskId)}/comments"));
     }
 
     /**
      * Add a comment to a task
      *
      * POST /open/v1/project/{projectId}/task/{taskId}/comment
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function addComment(string $taskId, string $projectId, array $data): array
     {
@@ -253,6 +281,8 @@ class TaskResource extends Resource
      * Delete a comment from a task
      *
      * DELETE /open/v1/project/{projectId}/task/{taskId}/comment/{commentId}
+     *
+     * @return array<mixed>
      */
     public function deleteComment(string $taskId, string $projectId, string $commentId): array
     {

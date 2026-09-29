@@ -8,16 +8,20 @@ class HabitResource extends Resource
      * Get all habits
      *
      * GET /open/v1/habit
+     *
+     * @return array<int, array<mixed>>
      */
     public function all(): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/habit");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/habit"));
     }
 
     /**
      * Get a habit
      *
      * GET /open/v1/habit/{habitId}
+     *
+     * @return array<mixed>
      */
     public function get(string $habitId): array
     {
@@ -29,7 +33,8 @@ class HabitResource extends Resource
      *
      * POST /open/v1/habit
      *
-     * @param  array  $data  name, goal, unit, repeatRule (RRULE), colour and so on
+     * @param  array<string, mixed>  $data  name, goal, unit, repeatRule (RRULE), colour and so on
+     * @return array<mixed>
      */
     public function create(array $data): array
     {
@@ -40,6 +45,9 @@ class HabitResource extends Resource
      * Update a habit
      *
      * POST /open/v1/habit/{habitId}
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function update(string $habitId, array $data): array
     {
@@ -51,7 +59,8 @@ class HabitResource extends Resource
      *
      * POST /open/v1/habit/{habitId}/checkin
      *
-     * @param  array  $data  stamp (Ymd, e.g. 20260407), value, goal
+     * @param  array<string, mixed>  $data  stamp (Ymd, e.g. 20260407), value, goal
+     * @return array<mixed>
      */
     public function checkin(string $habitId, array $data): array
     {
@@ -66,13 +75,14 @@ class HabitResource extends Resource
      * @param  array<int, string>  $habitIds
      * @param  string|int  $from  Date stamp in Ymd form, e.g. 20260401
      * @param  string|int  $to  Date stamp in Ymd form, e.g. 20260430
+     * @return array<int, array<mixed>>
      */
     public function checkins(array $habitIds, string|int $from, string|int $to): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/habit/checkins", [
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/habit/checkins", [
             'habitIds' => implode(',', $habitIds),
             'from'     => (string)$from,
             'to'       => (string)$to,
-        ]);
+        ]));
     }
 }

@@ -31,9 +31,23 @@ abstract class Resource
 
     /**
      * Drop null entries so optional filters are omitted rather than sent as null.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function filterNulls(array $data): array
     {
         return array_filter($data, static fn($value) => $value !== null);
+    }
+
+    /**
+     * Keep the objects of a list response, dropping anything that isn't one.
+     *
+     * @param  array<mixed>  $response
+     * @return array<int, array<mixed>>
+     */
+    protected function toList(array $response): array
+    {
+        return array_values(array_filter($response, is_array(...)));
     }
 }

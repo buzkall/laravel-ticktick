@@ -11,7 +11,7 @@ class TickTickServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/ticktick.php', 'ticktick');
 
         $this->app->singleton(TickTick::class, function($app) {
-            $config = $app['config']['ticktick'];
+            $config = config()->array('ticktick');
 
             return new TickTick([
                 'client_id'     => $config['client_id'] ?? null,
@@ -39,6 +39,9 @@ class TickTickServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function provides(): array
     {
         return [TickTick::class, 'ticktick'];

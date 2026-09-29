@@ -8,10 +8,12 @@ class TagResource extends Resource
      * Get all tags
      *
      * GET /open/v1/tag
+     *
+     * @return array<int, array<mixed>>
      */
     public function all(): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/tag");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/tag"));
     }
 
     /**
@@ -19,7 +21,8 @@ class TagResource extends Resource
      *
      * POST /open/v1/tag
      *
-     * @param  array  $data  name, label, color, sortOrder
+     * @param  array<string, mixed>  $data  name, label, color, sortOrder
+     * @return array<mixed>
      */
     public function create(array $data): array
     {

@@ -8,10 +8,12 @@ class ColumnResource extends Resource
      * Get the kanban columns of a project
      *
      * GET /open/v1/project/{projectId}/column
+     *
+     * @return array<int, array<mixed>>
      */
     public function all(string $projectId): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/project/{$this->encode($projectId)}/column");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/project/{$this->encode($projectId)}/column"));
     }
 
     /**
@@ -19,7 +21,8 @@ class ColumnResource extends Resource
      *
      * POST /open/v1/project/{projectId}/column
      *
-     * @param  array  $data  name, sortOrder
+     * @param  array<string, mixed>  $data  name, sortOrder
+     * @return array<mixed>
      */
     public function create(string $projectId, array $data): array
     {
@@ -30,6 +33,9 @@ class ColumnResource extends Resource
      * Update a kanban column
      *
      * POST /open/v1/project/{projectId}/column/{columnId}
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function update(string $projectId, string $columnId, array $data): array
     {

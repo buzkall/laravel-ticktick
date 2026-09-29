@@ -23,6 +23,9 @@ class TickTick
     protected HabitResource $habits;
     protected CountdownResource $countdowns;
 
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(array $config = [])
     {
         $this->client = new TickTickClient($config);
@@ -118,16 +121,25 @@ class TickTick
         return TickTickClient::generatePkceChallenge();
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null): array
     {
         return $this->client->getAccessTokenFromCode($code, $clientId, $clientSecret, $redirectUri, $scope, $codeVerifier);
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null): array
     {
         return $this->client->getAccessTokenFromPkceCode($code, $codeVerifier, $clientId, $redirectUri, $scope);
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null): array
     {
         return $this->client->refreshAccessToken($refreshToken, $clientId, $clientSecret, $scope);

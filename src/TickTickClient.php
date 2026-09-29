@@ -29,17 +29,20 @@ class TickTickClient
     protected string $openApiUrl;
     protected string $oauthUrl;
 
+    /**
+     * @param  array<string, mixed>  $config
+     */
     public function __construct(array $config = [])
     {
-        $this->accessToken = $config['access_token'] ?? null;
-        $this->refreshToken = $config['refresh_token'] ?? null;
-        $this->clientId = $config['client_id'] ?? null;
-        $this->clientSecret = $config['client_secret'] ?? null;
-        $this->redirectUri = $config['redirect_uri'] ?? null;
-        $this->scope = $config['scope'] ?? self::DEFAULT_SCOPE;
-        $this->baseUrl = $config['base_url'] ?? 'https://api.ticktick.com';
-        $this->openApiUrl = $config['open_api_url'] ?? 'https://api.ticktick.com/open/v1';
-        $this->oauthUrl = $config['oauth_url'] ?? 'https://ticktick.com';
+        $this->accessToken = self::stringOrNull($config['access_token'] ?? null);
+        $this->refreshToken = self::stringOrNull($config['refresh_token'] ?? null);
+        $this->clientId = self::stringOrNull($config['client_id'] ?? null);
+        $this->clientSecret = self::stringOrNull($config['client_secret'] ?? null);
+        $this->redirectUri = self::stringOrNull($config['redirect_uri'] ?? null);
+        $this->scope = self::stringOrNull($config['scope'] ?? null) ?? self::DEFAULT_SCOPE;
+        $this->baseUrl = self::stringOrNull($config['base_url'] ?? null) ?? 'https://api.ticktick.com';
+        $this->openApiUrl = self::stringOrNull($config['open_api_url'] ?? null) ?? 'https://api.ticktick.com/open/v1';
+        $this->oauthUrl = self::stringOrNull($config['oauth_url'] ?? null) ?? 'https://ticktick.com';
 
         $clientConfig = [
             'timeout' => $config['timeout'] ?? 30,
@@ -131,6 +134,11 @@ class TickTickClient
         ];
     }
 
+    protected static function stringOrNull(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
+    }
+
     protected static function base64UrlEncode(string $bytes): string
     {
         return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
@@ -138,6 +146,8 @@ class TickTickClient
 
     /**
      * Exchange the authorization code returned by TickTick for an access token.
+     *
+     * @return array<mixed>
      */
     public function getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null): array
     {
@@ -154,6 +164,8 @@ class TickTickClient
      * Exchange an authorization code obtained through the PKCE flow.
      *
      * PKCE is for public clients, so no client secret is sent.
+     *
+     * @return array<mixed>
      */
     public function getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null): array
     {
@@ -171,6 +183,8 @@ class TickTickClient
      *
      * TickTick access tokens expire, so long lived integrations need to call
      * this before the stored token becomes invalid.
+     *
+     * @return array<mixed>
      */
     public function refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null): array
     {
@@ -193,6 +207,9 @@ class TickTickClient
      * The credentials are sent both as HTTP Basic auth (as described in the
      * TickTick documentation) and as form parameters, which keeps the request
      * compatible with either expectation.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<mixed>
      */
     protected function requestToken(array $params, ?string $clientId = null, ?string $clientSecret = null, bool $confidential = true): array
     {
@@ -216,11 +233,11 @@ class TickTickClient
 
             $data = $this->decodeBody($response->getBody()->getContents());
 
-            if (isset($data['access_token'])) {
+            if (is_string($data['access_token'] ?? null)) {
                 $this->setAccessToken($data['access_token']);
             }
 
-            if (isset($data['refresh_token'])) {
+            if (is_string($data['refresh_token'] ?? null)) {
                 $this->setRefreshToken($data['refresh_token']);
             }
 
@@ -234,6 +251,10 @@ class TickTickClient
         }
     }
 
+    /**
+     * @param  array{headers?: array<string, string>, query?: array<string, mixed>, json?: array<mixed>}  $options
+     * @return array<mixed>
+     */
     protected function request(string $method, string $endpoint, array $options = []): array
     {
         if (! $this->accessToken) {
@@ -258,6 +279,10 @@ class TickTickClient
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<mixed>
+     */
     public function get(string $endpoint, array $query = []): array
     {
         $options = [];
@@ -268,6 +293,10 @@ class TickTickClient
         return $this->request('GET', $endpoint, $options);
     }
 
+    /**
+     * @param  array<mixed>  $data
+     * @return array<mixed>
+     */
     public function post(string $endpoint, array $data = []): array
     {
         // Endpoints such as "complete" take no payload at all, so an empty
@@ -275,11 +304,19 @@ class TickTickClient
         return $this->request('POST', $endpoint, empty($data) ? [] : ['json' => $data]);
     }
 
+    /**
+     * @param  array<mixed>  $data
+     * @return array<mixed>
+     */
     public function put(string $endpoint, array $data = []): array
     {
         return $this->request('PUT', $endpoint, empty($data) ? [] : ['json' => $data]);
     }
 
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<mixed>
+     */
     public function delete(string $endpoint, array $query = []): array
     {
         $options = [];
@@ -293,6 +330,8 @@ class TickTickClient
     /**
      * Decode a response body, tolerating the empty bodies TickTick returns for
      * endpoints such as delete and complete.
+     *
+     * @return array<mixed>
      */
     protected function decodeBody(string $content): array
     {
@@ -325,8 +364,9 @@ class TickTickClient
         $statusCode = null;
         $responseBody = null;
 
-        if ($e->hasResponse()) {
-            $response = $e->getResponse();
+        $response = $e->getResponse();
+
+        if ($response !== null) {
             $statusCode = $response->getStatusCode();
             $responseBody = $response->getBody()->getContents();
             $message .= ' Response: ' . $responseBody;
@@ -337,6 +377,9 @@ class TickTickClient
 
     /**
      * Drop null entries so optional parameters are omitted entirely.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
      */
     protected function filterNulls(array $data): array
     {

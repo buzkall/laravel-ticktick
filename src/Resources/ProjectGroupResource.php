@@ -8,10 +8,12 @@ class ProjectGroupResource extends Resource
      * Get all project groups (folders)
      *
      * GET /open/v1/project/group
+     *
+     * @return array<int, array<mixed>>
      */
     public function all(): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/project/group");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/project/group"));
     }
 
     /**
@@ -19,7 +21,8 @@ class ProjectGroupResource extends Resource
      *
      * POST /open/v1/project/group
      *
-     * @param  array  $data  name, sortOrder
+     * @param  array<string, mixed>  $data  name, sortOrder
+     * @return array<mixed>
      */
     public function create(array $data): array
     {
@@ -30,6 +33,9 @@ class ProjectGroupResource extends Resource
      * Update a project group
      *
      * POST /open/v1/project/group/{projectGroupId}
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<mixed>
      */
     public function update(string $projectGroupId, array $data): array
     {
@@ -40,6 +46,8 @@ class ProjectGroupResource extends Resource
      * Delete a project group
      *
      * DELETE /open/v1/project/group/{projectGroupId}
+     *
+     * @return array<mixed>
      */
     public function delete(string $projectGroupId): array
     {

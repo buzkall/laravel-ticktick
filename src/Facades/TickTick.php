@@ -19,10 +19,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Arzcode\TickTick\TickTick setRefreshToken(string $token)
  * @method static string|null getRefreshToken()
  * @method static string getAuthorizationUrl(?string $clientId = null, ?string $redirectUri = null, ?string $scope = null, string $state = '', ?string $codeChallenge = null)
- * @method static array generatePkceChallenge()
- * @method static array getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null)
- * @method static array getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null)
- * @method static array refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null)
+ * @method static array{code_verifier: string, code_challenge: string} generatePkceChallenge()
+ * @method static array<mixed> getAccessTokenFromCode(string $code, ?string $clientId = null, ?string $clientSecret = null, ?string $redirectUri = null, ?string $scope = null, ?string $codeVerifier = null)
+ * @method static array<mixed> getAccessTokenFromPkceCode(string $code, string $codeVerifier, ?string $clientId = null, ?string $redirectUri = null, ?string $scope = null)
+ * @method static array<mixed> refreshAccessToken(?string $refreshToken = null, ?string $clientId = null, ?string $clientSecret = null, ?string $scope = null)
  *
  * @see \Arzcode\TickTick\TickTick
  */

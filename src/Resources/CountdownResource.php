@@ -8,9 +8,11 @@ class CountdownResource extends Resource
      * Get all countdowns
      *
      * GET /open/v1/countdown
+     *
+     * @return array<int, array<mixed>>
      */
     public function all(): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/countdown");
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/countdown"));
     }
 }

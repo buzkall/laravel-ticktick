@@ -16,6 +16,7 @@ class FocusResource extends Resource
      * GET /open/v1/focus/{focusId}?type=
      *
      * @param  int  $type  self::TYPE_POMODORO or self::TYPE_TIMING
+     * @return array<mixed>
      */
     public function get(string $focusId, int $type = self::TYPE_POMODORO): array
     {
@@ -31,14 +32,15 @@ class FocusResource extends Resource
      *
      * @param  string  $from  ISO 8601, e.g. 2026-04-01T00:00:00+0000
      * @param  string  $to  ISO 8601, e.g. 2026-04-30T23:59:59+0000
+     * @return array<int, array<mixed>>
      */
     public function all(string $from, string $to, int $type = self::TYPE_POMODORO): array
     {
-        return $this->client->get("{$this->getOpenApiUrl()}/focus", [
+        return $this->toList($this->client->get("{$this->getOpenApiUrl()}/focus", [
             'from' => $from,
             'to'   => $to,
             'type' => $type,
-        ]);
+        ]));
     }
 
     /**
@@ -46,7 +48,8 @@ class FocusResource extends Resource
      *
      * POST /open/v1/focus
      *
-     * @param  array  $data  type, taskId, startTime, endTime, duration (seconds)
+     * @param  array<string, mixed>  $data  type, taskId, startTime, endTime, duration (seconds)
+     * @return array<mixed>
      */
     public function create(array $data): array
     {
@@ -57,6 +60,8 @@ class FocusResource extends Resource
      * Delete a focus record
      *
      * DELETE /open/v1/focus/{focusId}?type=
+     *
+     * @return array<mixed>
      */
     public function delete(string $focusId, int $type = self::TYPE_POMODORO): array
     {
